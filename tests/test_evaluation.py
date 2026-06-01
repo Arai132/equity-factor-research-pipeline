@@ -68,3 +68,44 @@ def test_ic_stats_degenerate_series():
     stats_single = compute_ic_stats(single)
     assert np.isnan(stats_single["mean_ic"])
     assert stats_single["n_months"] == 1
+
+
+from evaluation.quintile import compute_quintile_returns, compute_quintile_stats
+from evaluation.decay import compute_factor_decay, compute_factor_correlation
+
+
+def test_quintile_returns_shape():
+    factor, returns = make_factor_and_returns(n_dates=60, n_stocks=200)
+    q_returns = compute_quintile_returns(factor, returns)
+    assert isinstance(q_returns, pd.DataFrame)
+    assert list(q_returns.columns) == ["Q1", "Q2", "Q3", "Q4", "Q5"]
+
+
+def test_quintile_monotonic_for_strong_factor():
+    np.random.seed(7)
+    n, m = 120, 300
+    dates = pd.date_range("2010-01-31", periods=n, freq="ME")
+    tickers = [f"S{i}" for i in range(m)]
+    factor = pd.DataFrame(np.random.randn(n, m), index=dates, columns=tickers)
+    returns = 0.2 * factor + pd.DataFrame(np.random.randn(n, m) * 0.05, index=dates, columns=tickers)
+    q_returns = compute_quintile_returns(factor, returns)
+    means = q_returns.mean()
+    assert means["Q5"] > means["Q4"] > means["Q1"]
+
+
+def test_decay_returns_correct_horizons():
+    factor, returns = make_factor_and_returns(n_dates=60, n_stocks=100)
+    # Pad returns for multi-horizon computation
+    extra = pd.DataFrame(0.0, index=pd.date_range(returns.index[-1] + pd.offsets.MonthEnd(1),
+                         periods=12, freq="ME"), columns=returns.columns)
+    long_returns = pd.concat([returns, extra])
+    decay = compute_factor_decay(factor, long_returns, horizons=[1, 3, 6])
+    assert list(decay.index) == [1, 3, 6]
+    assert "mean_ic" in decay.columns
+
+
+def test_factor_correlation_diagonal_is_one():
+    factor, _ = make_factor_and_returns()
+    corr = compute_factor_correlation({"F1": factor, "F2": factor * 2})
+    assert abs(corr.loc["F1", "F1"] - 1.0) < 1e-6
+    assert abs(corr.loc["F2", "F2"] - 1.0) < 1e-6
