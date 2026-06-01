@@ -57,3 +57,47 @@ def test_ic_weighted_uses_only_past_ic():
     pd.testing.assert_frame_equal(
         alpha_full.loc[common[:12]], alpha_trunc.loc[common[:12]], check_exact=False, atol=1e-10
     )
+
+
+from portfolio.backtest import run_backtest, compute_performance_metrics
+
+
+def make_alpha_and_returns(n_dates=60, n_stocks=200):
+    np.random.seed(42)
+    dates = pd.date_range("2010-01-31", periods=n_dates, freq="ME")
+    tickers = [f"S{i}" for i in range(n_stocks)]
+    alpha = pd.DataFrame(np.random.randn(n_dates, n_stocks), index=dates, columns=tickers)
+    returns = pd.DataFrame(np.random.randn(n_dates, n_stocks) * 0.05, index=dates, columns=tickers)
+    spy = pd.Series(np.random.randn(n_dates) * 0.04, index=dates, name="SPY")
+    return alpha, returns, spy
+
+
+def test_backtest_returns_expected_keys():
+    alpha, returns, spy = make_alpha_and_returns()
+    result = run_backtest(alpha, returns, spy_returns=spy)
+    assert "returns" in result
+    assert "metrics_gross" in result
+    assert "metrics_net" in result
+
+
+def test_backtest_net_less_than_gross():
+    alpha, returns, spy = make_alpha_and_returns()
+    result = run_backtest(alpha, returns, spy_returns=spy)
+    gross = result["metrics_gross"]["annualized_return"]
+    net = result["metrics_net"]["annualized_return"]
+    assert net <= gross
+
+
+def test_performance_metrics_keys():
+    returns = pd.Series(np.random.randn(60) * 0.05, index=pd.date_range("2010-01-31", periods=60, freq="ME"))
+    spy = returns * 0.8 + pd.Series(np.random.randn(60) * 0.01, index=returns.index)
+    metrics = compute_performance_metrics(returns, spy_returns=spy)
+    for key in ["annualized_return", "annualized_vol", "sharpe_ratio",
+                "max_drawdown", "calmar_ratio", "monthly_win_rate", "beta_to_spy"]:
+        assert key in metrics
+
+
+def test_max_drawdown_is_negative():
+    returns = pd.Series([-0.05] * 12, index=pd.date_range("2010-01-31", periods=12, freq="ME"))
+    metrics = compute_performance_metrics(returns)
+    assert metrics["max_drawdown"] < 0
