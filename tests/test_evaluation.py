@@ -9,7 +9,7 @@ def make_factor_and_returns(n_dates=36, n_stocks=100, seed=0):
     dates = pd.date_range("2020-01-31", periods=n_dates, freq="ME")
     tickers = [f"S{i}" for i in range(n_stocks)]
     factor = pd.DataFrame(np.random.randn(n_dates, n_stocks), index=dates, columns=tickers)
-    # Returns correlated with factor (IC ~ 0.05) + noise
+    # Returns strongly correlated with factor + noise
     returns = 0.05 * factor + pd.DataFrame(
         np.random.randn(n_dates, n_stocks) * 0.1, index=dates, columns=tickers
     )
@@ -44,3 +44,27 @@ def test_ic_negative_for_inverted_factor():
     ic_pos = compute_ic_series(factor, returns)
     ic_neg = compute_ic_series(-factor, returns)
     assert compute_ic_stats(ic_neg)["mean_ic"] < 0
+
+
+def test_ic_series_nan_when_insufficient_stocks():
+    """Dates with fewer than min_stocks valid observations should produce NaN."""
+    dates = pd.date_range("2020-01-31", periods=3, freq="ME")
+    tickers = [f"S{i}" for i in range(10)]
+    factor = pd.DataFrame(np.random.randn(3, 10), index=dates, columns=tickers)
+    returns = pd.DataFrame(np.random.randn(3, 10), index=dates, columns=tickers)
+    ic = compute_ic_series(factor, returns, min_stocks=20)  # 10 stocks < 20 threshold
+    assert ic.isna().all()
+
+
+def test_ic_stats_degenerate_series():
+    """IC series with fewer than 2 observations should return NaN for all stats."""
+    empty = pd.Series(dtype=float)
+    stats = compute_ic_stats(empty)
+    assert np.isnan(stats["mean_ic"])
+    assert np.isnan(stats["t_stat"])
+    assert stats["n_months"] == 0
+
+    single = pd.Series([0.05])
+    stats_single = compute_ic_stats(single)
+    assert np.isnan(stats_single["mean_ic"])
+    assert stats_single["n_months"] == 1
