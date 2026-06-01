@@ -55,5 +55,5 @@ def test_ic_weighted_uses_only_past_ic():
     # Months 1-12 overlap: same weights since IC history up to each point is identical
     common = alpha_full.index.intersection(alpha_trunc.index)
     pd.testing.assert_frame_equal(
-        alpha_full.loc[common[:6]], alpha_trunc.loc[common[:6]], check_exact=False, atol=1e-10
+        alpha_full.loc[common[:12]], alpha_trunc.loc[common[:12]], check_exact=False, atol=1e-10
     )

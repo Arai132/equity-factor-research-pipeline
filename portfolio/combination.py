@@ -24,6 +24,8 @@ def ic_weighted_alpha(
     Weight each factor by its expanding-window mean IC, estimated on data strictly
     before the current rebalance date (no look-ahead).
     Falls back to equal weighting until each factor has at least one IC observation.
+    Weights preserve sign: a factor with negative mean IC receives a negative weight,
+    effectively shorting it. Weights are normalized by sum(|IC|) so magnitudes sum to 1.
     """
     names = list(factors.keys())
     all_dates = sorted(set().union(*[f.index for f in factors.values()]))
@@ -40,11 +42,15 @@ def ic_weighted_alpha(
         else:
             weights = {name: mean_ics[name] / total for name in names}
 
-        # Compute composite score
+        # Compute composite score (re-normalize weights over available factors)
         available = {name: factors[name].loc[date] for name in names if date in factors[name].index}
         if not available:
             continue
-        composite = sum(weights[name] * available[name] for name in available)
+        avail_weights = {name: weights[name] for name in available}
+        avail_total = sum(abs(w) for w in avail_weights.values())
+        if avail_total > 1e-12:
+            avail_weights = {name: w / avail_total for name, w in avail_weights.items()}
+        composite = sum(avail_weights[name] * available[name] for name in available)
         result[date] = composite
 
         # Update IC history using this date's realized IC
