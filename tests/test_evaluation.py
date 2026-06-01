@@ -90,7 +90,7 @@ def test_quintile_monotonic_for_strong_factor():
     returns = 0.2 * factor + pd.DataFrame(np.random.randn(n, m) * 0.05, index=dates, columns=tickers)
     q_returns = compute_quintile_returns(factor, returns)
     means = q_returns.mean()
-    assert means["Q5"] > means["Q4"] > means["Q1"]
+    assert means["Q1"] < means["Q2"] < means["Q3"] < means["Q4"] < means["Q5"]
 
 
 def test_decay_returns_correct_horizons():
