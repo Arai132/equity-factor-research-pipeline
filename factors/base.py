@@ -16,11 +16,11 @@ def zscore_cross_section(s: pd.Series) -> pd.Series:
 
 
 def normalize(s: pd.Series, n_std: float = 3.0) -> pd.Series:
-    """Z-score then winsorize. Standard cross-sectional normalization pipeline."""
+    """Winsorize then z-score. Standard cross-sectional normalization pipeline."""
     valid = s.dropna()
     if len(valid) < 2:
         return pd.Series(np.nan, index=s.index)
-    return winsorize_cross_section(zscore_cross_section(valid), n_std).reindex(s.index)
+    return zscore_cross_section(winsorize_cross_section(valid, n_std)).reindex(s.index)
 
 
 class BaseFactor(ABC):
