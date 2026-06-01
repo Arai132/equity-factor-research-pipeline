@@ -15,8 +15,11 @@ class IVolFactor(BaseFactor):
 
     def compute(self, prices, volume, fundamentals, rebalance_dates):
         daily_returns = prices.pct_change().dropna(how="all")
-        spy_source = self.spy_prices if self.spy_prices is not None else volume
-        spy = spy_source.iloc[:, 0].pct_change().dropna() if spy_source is not None else None
+        spy = (
+            self.spy_prices.iloc[:, 0].pct_change().dropna()
+            if self.spy_prices is not None
+            else None
+        )
         signals = {}
 
         for date in rebalance_dates:
