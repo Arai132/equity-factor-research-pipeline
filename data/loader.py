@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-CACHE_DIR = Path("data/cache")
+CACHE_DIR = Path(__file__).resolve().parent / "cache"
 
 
 def download_prices(tickers: list[str], start: str, end: str) -> pd.DataFrame:
