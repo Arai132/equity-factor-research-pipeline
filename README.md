@@ -9,10 +9,10 @@ Five systematic equity factors are constructed, evaluated, combined into a compo
 | Factor | Description | Data |
 |--------|-------------|------|
 | MOM | 12-1 month price momentum | Price |
+| MOM6 | 6-1 month price momentum (medium-term) | Price |
 | REV | 1-month short-term reversal (negated) | Price |
 | IVOL | Idiosyncratic volatility from 60-day OLS on SPY (negated) | Price |
-| ILLIQ | Amihud illiquidity: avg \|ret\|/dvol over 21 days (negated) | Price + Volume |
-| EP | Trailing EPS / price, 45-day filing lag | Fundamental |
+| ILLIQ | Amihud illiquidity: avg \|ret\|/dvol over 21 days | Price + Volume |
 
 Each factor is cross-sectionally winsorized (±3σ) and z-scored before use.
 
@@ -34,7 +34,7 @@ Transaction costs: 10bps per-side applied to monthly turnover.
 
 1. **Survivorship bias**: Uses current S&P 500 constituents. Companies removed from the index (bankruptcies, delistings) are excluded, which inflates all factor returns. Production research requires a point-in-time constituent universe (e.g., CRSP).
 2. **Research backtest only**: No market impact, slippage, borrow costs, or capacity modeling.
-3. **Free fundamental data**: EP factor coverage is lower than price factors (~200 vs ~480 stocks/month) due to yfinance fundamental history limitations.
+3. **No fundamental factor**: yfinance's earnings history is limited to recent quarters only, preventing an EP factor with 2010–2024 coverage. MOM6 (6-1 month momentum) is used as the fifth factor instead.
 4. **Equal weighting within legs**: No risk model or optimizer. Beta neutrality is approximate.
 
 ## Setup
@@ -42,7 +42,7 @@ Transaction costs: 10bps per-side applied to monthly turnover.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python run_pipeline.py   # downloads data (~15 min first run), prints IC stats
+python run_pipeline.py   # downloads data (~5 min first run), prints IC stats
 jupyter notebook notebooks/research.ipynb
 ```
 

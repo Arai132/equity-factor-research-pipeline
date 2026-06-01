@@ -1,14 +1,13 @@
 """
-End-to-end pipeline runner. Execute once to download data and verify all components work.
-Estimated runtime: 15-30 minutes on first run (fundamentals download). Subsequent runs: ~2 min.
+End-to-end pipeline runner. Downloads data and verifies all components work.
+Estimated runtime: ~5 min on first run (prices + volume download). Subsequent runs: ~2 min.
 """
 import pandas as pd
-from data.loader import download_prices, download_volume, download_fundamentals
+from data.loader import download_prices, download_volume
 from data.universe import get_sp500_tickers, build_return_matrix
-from factors.momentum import MomentumFactor, ReversalFactor
+from factors.momentum import MomentumFactor, MediumMomentumFactor, ReversalFactor
 from factors.volatility import IVolFactor
 from factors.illiquidity import IlliquidityFactor
-from factors.earnings_yield import EarningsYieldFactor
 from evaluation.ic import compute_ic_series, compute_ic_stats
 from evaluation.quintile import compute_quintile_returns
 from evaluation.decay import compute_factor_decay, compute_factor_correlation
@@ -39,17 +38,14 @@ monthly_closes, monthly_returns = build_return_matrix(prices, START_SIGNAL, END_
 rebalance_dates = monthly_closes.index
 forward_returns = monthly_returns.shift(-1)
 
-print("Downloading fundamentals (slow on first run)...")
-fundamentals = download_fundamentals(tickers)
-
 print("Computing factors...")
 ivol_factor = IVolFactor(spy_prices=spy_daily)
 factors = {
     "MOM":   MomentumFactor().compute(prices, volume, None, rebalance_dates),
+    "MOM6":  MediumMomentumFactor().compute(prices, volume, None, rebalance_dates),
     "REV":   ReversalFactor().compute(prices, volume, None, rebalance_dates),
     "IVOL":  ivol_factor.compute(prices, volume, None, rebalance_dates),
     "ILLIQ": IlliquidityFactor().compute(prices, volume, None, rebalance_dates),
-    "EP":    EarningsYieldFactor().compute(prices, volume, fundamentals, rebalance_dates),
 }
 
 print("\n=== Factor Coverage (number of stocks with valid signal) ===")

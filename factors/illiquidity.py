@@ -5,8 +5,8 @@ from factors.base import BaseFactor
 
 class IlliquidityFactor(BaseFactor):
     """
-    Amihud illiquidity: 21-day avg of |daily return| / daily dollar volume, negated.
-    Liquid stocks (low ILLIQ) receive positive scores.
+    Amihud illiquidity: 21-day avg of |daily return| / daily dollar volume.
+    Illiquid stocks (high ILLIQ) receive positive scores, capturing the illiquidity premium.
     """
 
     def __init__(self, window: int = 21):
@@ -25,6 +25,6 @@ class IlliquidityFactor(BaseFactor):
             if illiq.isna().all():
                 continue
 
-            signals[date] = -illiq
+            signals[date] = illiq
 
         return self._normalize_signals(signals)

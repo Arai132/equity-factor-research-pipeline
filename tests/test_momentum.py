@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from factors.momentum import MomentumFactor, ReversalFactor
+from factors.momentum import MomentumFactor, MediumMomentumFactor, ReversalFactor
 
 
 def make_prices(n_months: int = 15) -> pd.DataFrame:
@@ -48,6 +48,19 @@ def test_momentum_no_lookahead():
 def test_momentum_insufficient_history_returns_empty():
     prices = make_prices(5)
     result = MomentumFactor().compute(prices, None, None, prices.index)
+    assert len(result) == 0
+
+
+def test_medium_momentum_ordering():
+    prices = make_prices(10)
+    result = MediumMomentumFactor().compute(prices, None, None, prices.index[-1:])
+    row = result.iloc[0]
+    assert row["UP"] > row["FLAT"] > row["DOWN"]
+
+
+def test_medium_momentum_insufficient_history_returns_empty():
+    prices = make_prices(5)
+    result = MediumMomentumFactor().compute(prices, None, None, prices.index)
     assert len(result) == 0
 
 

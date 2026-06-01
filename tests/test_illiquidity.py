@@ -18,11 +18,11 @@ def make_data():
     return prices, volume
 
 
-def test_liquid_stock_scores_higher():
+def test_illiquid_stock_scores_higher():
     prices, volume = make_data()
     factor = IlliquidityFactor()
     result = factor.compute(prices, volume, None, prices.index[-1:])
-    assert result.iloc[0]["LIQUID"] > result.iloc[0]["ILLIQUID"]
+    assert result.iloc[0]["ILLIQUID"] > result.iloc[0]["LIQUID"]
 
 
 def test_illiquidity_no_lookahead():
