@@ -12,7 +12,7 @@ def run_backtest(
 ) -> dict:
     """
     Long top quintile, short bottom quintile of composite alpha.
-    Applies 10bps one-way transaction costs on turnover.
+    Applies 10bps per-side transaction costs on turnover (charged on both long and short legs).
     Returns gross and net-of-cost performance.
     """
     tc = transaction_cost_bps / 10_000
@@ -78,7 +78,7 @@ def compute_performance_metrics(
     if spy_returns is not None:
         common = returns.index.intersection(spy_returns.index)
         if len(common) > 12:
-            beta = np.cov(returns[common], spy_returns[common])[0, 1] / np.var(spy_returns[common])
+            beta = np.cov(returns[common], spy_returns[common])[0, 1] / np.var(spy_returns[common], ddof=1)
 
     return {
         "annualized_return": ann_ret,

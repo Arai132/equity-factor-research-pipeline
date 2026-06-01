@@ -80,12 +80,19 @@ def test_backtest_returns_expected_keys():
     assert "metrics_net" in result
 
 
-def test_backtest_net_less_than_gross():
+def test_backtest_transaction_cost_applied():
+    """Net return must be strictly below gross, and the difference should reflect actual TC cost."""
     alpha, returns, spy = make_alpha_and_returns()
-    result = run_backtest(alpha, returns, spy_returns=spy)
-    gross = result["metrics_gross"]["annualized_return"]
-    net = result["metrics_net"]["annualized_return"]
-    assert net <= gross
+    result = run_backtest(alpha, returns, spy_returns=spy, transaction_cost_bps=10.0)
+    result_zero_tc = run_backtest(alpha, returns, spy_returns=spy, transaction_cost_bps=0.0)
+    # Net with costs must be strictly below gross (zero-cost net)
+    net_ret = result["returns"]["net"]
+    gross_ret = result_zero_tc["returns"]["net"]  # zero TC → net == gross
+    assert (gross_ret - net_ret).sum() > 0  # total cost drag is positive
+    # TC should be positive on each period with nonzero turnover
+    turnover = result["returns"]["turnover"]
+    has_turnover = turnover > 0
+    assert (gross_ret[has_turnover] > net_ret[has_turnover]).all()
 
 
 def test_performance_metrics_keys():
