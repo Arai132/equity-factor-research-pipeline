@@ -30,7 +30,7 @@ volume = download_volume(tickers, START_DAILY, END_DAILY)
 
 print("Downloading SPY...")
 import yfinance as yf
-spy_daily = yf.download("SPY", start=START_DAILY, end=END_DAILY, auto_adjust=True, progress=False)["Close"].to_frame()
+spy_daily = yf.download("SPY", start=START_DAILY, end=END_DAILY, auto_adjust=True, progress=False)[["Close"]]
 spy_monthly = spy_daily.resample("ME").last().loc[START_SIGNAL:END_SIGNAL].iloc[:, 0]
 spy_monthly_ret = spy_monthly.pct_change()
 
