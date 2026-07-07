@@ -37,14 +37,35 @@ Transaction costs: 10bps per-side applied to monthly turnover.
 3. **No fundamental factor**: yfinance's earnings history is limited to recent quarters only, preventing an EP factor with 2010–2024 coverage. MOM6 (6-1 month momentum) is used as the fifth factor instead.
 4. **Equal weighting within legs**: No risk model or optimizer. Beta neutrality is approximate.
 
+## Project Structure
+
+```
+data/           # ticker universe + price/volume download & caching (yfinance)
+factors/        # factor definitions (momentum, reversal, volatility, illiquidity)
+evaluation/     # IC/ICIR, quintile spreads, factor decay, factor correlation
+portfolio/      # alpha combination (equal-weight, IC-weighted) + backtest
+notebooks/      # research.ipynb - walks through the full analysis with plots
+run_pipeline.py # end-to-end script: downloads data, builds factors, backtests
+tests/          # pytest unit tests for each module
+```
+
 ## Setup
 
+Requires Python 3.10+.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
+git clone https://github.com/Arai132/equity-factor-research-pipeline.git
+cd equity-factor-research-pipeline
+
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
 pip install -r requirements.txt
 python run_pipeline.py   # downloads data (~5 min first run), prints IC stats
 jupyter notebook notebooks/research.ipynb
 ```
+
+Data is cached to `data/cache/` after the first download, so subsequent runs are fast.
 
 ## Tests
 
