@@ -1,6 +1,6 @@
 # Cross-Sectional Factor Research Pipeline
 
-End-to-end equity factor research on S&P 500 stocks (2010–2024), built as a Walleye Capital quant research internship application project.
+End-to-end equity factor research on S&P 500 stocks (2010–2024).
 
 ## What This Builds
 
