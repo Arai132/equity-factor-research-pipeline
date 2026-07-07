@@ -5,3 +5,6 @@ __pycache__/
 .ipynb_checkpoints/
 *.egg-info/
 .pytest_cache/
+requirements.txt
+resume.txt
+interview.txt
